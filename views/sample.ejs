@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Assessment Test Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            padding-top: 8vw;
+        }
+        .logo {
+            height: auto;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+        h1 {
+            color: #2c3e50;
+            z-index: 2;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            width: 45%;
+        }
+        .generate-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #topic {
+            padding: 10px;
+            width: 300px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .table-container {
+            display: none;
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .faculty-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        .faculty-box {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            width: 30%;
+        }
+        #loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .section {
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        .section-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .question {
+            margin-bottom: 10px;
+        }
+        .or-divider {
+            text-align: center;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="./images/logo.jpg" alt="VIT Logo" class="logo">
+        <h1>Internal Assessment</h1>
+    </div>
+
+    <div class="container">
+        <div class="info-box">
+            <p><strong>SEM/SEC:</strong> 5th CSE A</p>
+            <p><strong>SUBJECT:</strong> Microcontroller</p>
+            <p><strong>FACULTY:</strong> Rashmi R</p>
+        </div>
+        <div class="info-box">
+            <p><strong>DATE:</strong> 14-10-2023</p>
+            <p><strong>TIME:</strong> 2:00pm - 3:15pm</p>
+            <p><strong>Max. Marks:</strong> 25</p>
+        </div>
+    </div>
+
+    <div class="generate-section">
+        <input type="text" id="topic" name="topic" placeholder="Enter topic for questions" required>
+        <button onclick="generateQuestions()">Generate Questions</button>
+    </div>
+
+    <div id="loading">
+        <p>Generating questions... Please wait.</p>
+    </div>
+
+    <div id="questionsContainer" class="table-container">
+        <!-- Questions will be dynamically inserted here -->
+    </div>
+
+    <div class="faculty-info">
+        <div class="faculty-box">
+            <p><strong>FACULTY:</strong><br>Dr. Rashmi</p>
+        </div>
+        <div class="faculty-box">
+            <p><strong>HOD:</strong><br>Dr. Rama Krishna</p>
+        </div>
+        <div class="faculty-box">
+            <p><strong>PRINCIPAL:</strong><br>Dr. Vijay Simha Reddy</p>
+        </div>
+    </div>
+
+    <script>
+        async function generateQuestions() {
+            const topic = document.getElementById('topic').value;
+            if (!topic) {
+                alert('Please enter a topic');
+                return;
+            }
+
+            const loadingElement = document.getElementById('loading');
+            const questionsContainer = document.getElementById('questionsContainer');
+            
+            loadingElement.style.display = 'block';
+            questionsContainer.style.display = 'none';
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ topic }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                questionsContainer.innerHTML = ''; // Clear existing questions
+
+                data.questions.forEach((section, sectionIndex) => {
+                    const sectionElement = document.createElement('div');
+                    sectionElement.className = 'section';
+                    sectionElement.innerHTML = `
+                        <div class="section-header">Section ${sectionIndex + 1}</div>
+                        ${section.map((question, questionIndex) => `
+                            <div class="question">${questionIndex + 1}. ${question}</div>
+                        `).join('')}
+                    `;
+                    questionsContainer.appendChild(sectionElement);
+
+                    if (sectionIndex === 1 || sectionIndex === 3) {
+                        const orDivider = document.createElement('div');
+                        orDivider.className = 'or-divider';
+                        orDivider.textContent = 'OR';
+                        questionsContainer.appendChild(orDivider);
+                    }
+                });
+
+                loadingElement.style.display = 'none';
+                questionsContainer.style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while generating questions');
+                loadingElement.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
